@@ -1,4 +1,4 @@
-# Notes on Lab-2 Learnings
+# Notes on Lab-3 Learnings
 
 ## Signals
 

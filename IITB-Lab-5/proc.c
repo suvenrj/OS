@@ -253,6 +253,7 @@ exit(void)
   wakeup1(curproc->parent);
 
   // Pass abandoned children to init.
+  // Has been changed for LAB5 P1
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
       p->parent = curproc->parent;
@@ -333,6 +334,9 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if (p->state == PAUSE && (ticks-(p->pause_start) > (p->pause_duration))){
+        p->state =  RUNNABLE;
+      }
       if(p->state != RUNNABLE)
         continue;
 
@@ -551,4 +555,50 @@ int getppid(){
   struct proc* p = myproc();
   int ppid = p->parent->pid;
   return ppid;
+}
+
+int signal_process(int pid, int type){
+  if (type==0){
+    kill(pid);
+  }
+  else if(type==1){
+    struct proc *p;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid == pid){
+        p->state = PAUSE;
+        release(&ptable.lock);
+        return 0;
+      }
+    }
+    release(&ptable.lock);
+  }
+  else{
+    struct proc *p;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid == pid && p->state == PAUSE){
+        p->state = RUNNABLE;
+        release(&ptable.lock);
+        return 0;
+      }
+    }
+    release(&ptable.lock);
+  }
+}
+
+int pause(int pid, int duration, int start){
+    struct proc *p;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid == pid){
+        p->state = PAUSE;
+        p->pause_start = start;
+        p->pause_duration = duration;
+        cprintf("%d %d\n", start, duration);
+        release(&ptable.lock);
+        return 0;
+      }
+    }
+    release(&ptable.lock);
 }

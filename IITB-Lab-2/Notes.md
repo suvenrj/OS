@@ -12,7 +12,7 @@
 
 ### wait
 
-- Halts a process until all it's child processes exit
+- Halts a process until a child process exits
 
 ### waitpid
 
